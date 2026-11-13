@@ -1,4 +1,4 @@
-# view-image — UI Specification
+# miru — UI Specification
 
 Honeyview-inspired layout: minimal dark canvas, chrome that gets out of the way.
 Reference: screenshot of Honeyview 5.53 (pink theme, floating pill hotbar).
@@ -7,7 +7,7 @@ Reference: screenshot of Honeyview 5.53 (pink theme, floating pill hotbar).
 
 ```
 +--------------------------------------------------------------+
-| [icon] view-image            [─] [□] [✕]              <- top bar |
+| [icon] miru            [─] [□] [✕]              <- top bar |
 |  View  Slideshow  Bookmark  Edit  Copy to  Lock        <- menu row |
 +--------------------------------------------------------------+
 |                                                              |

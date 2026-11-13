@@ -667,13 +667,13 @@ impl eframe::App for App {
         let len = self.playlist.len();
         let title = if has_images {
             format!(
-                "mieru — {} — {}/{}",
+                "miru — {} — {}/{}",
                 self.entry_name(cursor),
                 cursor + 1,
                 len
             )
         } else {
-            "mieru".to_string()
+            "miru".to_string()
         };
 
         // ---- Titlebar: auto-hide overlay, drawn AFTER the canvas below ----

@@ -5,8 +5,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use image::{Rgb, RgbImage};
-use view_image::playlist::Playlist;
-use view_image::source::archive::open_source;
+use miru::playlist::Playlist;
+use miru::source::archive::open_source;
 
 fn write_png(path: &Path, w: u32, h: u32, color: Rgb<u8>) {
     let img = RgbImage::from_pixel(w, h, color);

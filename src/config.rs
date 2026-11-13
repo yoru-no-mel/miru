@@ -22,14 +22,14 @@ pub struct PersistedState {
 fn config_path() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
-        std::env::var_os("APPDATA").map(|b| PathBuf::from(b).join("view-image").join("config.toml"))
+        std::env::var_os("APPDATA").map(|b| PathBuf::from(b).join("miru").join("config.toml"))
     }
     #[cfg(not(target_os = "windows"))]
     {
         std::env::var_os("HOME").map(|h| {
             PathBuf::from(h)
                 .join(".config")
-                .join("view-image")
+                .join("miru")
                 .join("config.toml")
         })
     }

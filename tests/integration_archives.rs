@@ -7,7 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use image::{Rgb, RgbImage};
-use view_image::source::{archive::open_source, ImageSource};
+use miru::source::{archive::open_source, ImageSource};
 
 fn png_bytes(w: u32, h: u32, seed: u8) -> Vec<u8> {
     let img = RgbImage::from_pixel(w, h, Rgb([seed, 100, 200]));

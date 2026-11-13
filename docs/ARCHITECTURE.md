@@ -1,4 +1,4 @@
-# view-image — Architecture
+# miru — Architecture
 
 Single binary crate, no async runtime. UI runs on the main thread (egui);
 decoding runs on worker threads and hands results back through a channel.

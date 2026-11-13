@@ -1,4 +1,4 @@
-# view-image — Project Plan
+# miru — Project Plan
 
 A fast, dark-themed desktop image viewer with Honeyview-style chrome: auto-hiding
 title bar and hotbar, next/previous navigation, zoom controls, and a seekbar over
@@ -58,7 +58,7 @@ Edition 2024, Rust stable. No async runtime — background decode uses
 
 ### M0 — Scaffolding and docs (done)
 
-- [x] `cargo init` binary crate `view-image`
+- [x] `cargo init` binary crate `miru`
 - [x] `docs/PLAN.md`, `docs/UI-SPEC.md`, `docs/ARCHITECTURE.md`
 - [x] `.gitignore`: `/target`, `image-test/`
 

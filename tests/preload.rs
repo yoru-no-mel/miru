@@ -8,7 +8,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use image::{Rgb, RgbImage};
-use view_image::source::{archive::open_source, DecodedImage, FsSource, ImageSource, SourceError};
+use miru::source::{archive::open_source, DecodedImage, FsSource, ImageSource, SourceError};
 
 type Emitted = Vec<(usize, Result<DecodedImage, SourceError>)>;
 
