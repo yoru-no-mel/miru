@@ -24,7 +24,17 @@ fn config_path() -> Option<PathBuf> {
     {
         std::env::var_os("APPDATA").map(|b| PathBuf::from(b).join("miru").join("config.toml"))
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        std::env::var_os("HOME").map(|h| {
+            PathBuf::from(h)
+                .join("Library")
+                .join("Application Support")
+                .join("miru")
+                .join("config.toml")
+        })
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
     {
         std::env::var_os("HOME").map(|h| {
             PathBuf::from(h)

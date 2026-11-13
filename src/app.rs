@@ -409,6 +409,7 @@ impl App {
             ShortcutAction::PrevSource => self.goto_sibling(-1),
             ShortcutAction::NextSource => self.goto_sibling(1),
             ShortcutAction::Filter(mode) => self.apply_filter_mode(mode),
+            ShortcutAction::Close => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
         }
     }
 
@@ -719,9 +720,14 @@ impl eframe::App for App {
                                 .color(crate::theme::TEXT_DIM),
                         );
                         ui.label(
-                            egui::RichText::new(
-                                "Drop an image, folder, or archive  ·  Ctrl+O",
-                            )
+                            egui::RichText::new(format!(
+                                "Drop an image, folder, or archive  ·  {}O",
+                                if cfg!(target_os = "macos") {
+                                    "⌘"
+                                } else {
+                                    "Ctrl+"
+                                }
+                            ))
                             .color(crate::theme::TEXT_DIM),
                         );
                     });
