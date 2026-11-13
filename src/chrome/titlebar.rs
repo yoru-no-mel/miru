@@ -1,10 +1,25 @@
 //! Custom undecorated titlebar: app icon (left), centered title,
-//! min/max/close (right). All chrome is painted with the egui painter
-//! (no font glyphs), so every icon renders identically on any platform.
+//! min/max/close. All chrome is painted with the egui painter (no font
+//! glyphs), so every icon renders identically on any platform. On macOS the
+//! window controls follow platform convention: three traffic-light circles
+//! on the left edge; elsewhere painted glyphs sit on the right.
 
 use egui::{Color32, Pos2, Rect, Sense, Stroke, Vec2};
 
 use crate::theme;
+
+/// Whether to use macOS traffic-light window controls.
+const MACOS: bool = cfg!(target_os = "macos");
+
+/// Traffic-light fill colors (macOS standard hues).
+const TL_CLOSE: Color32 = Color32::from_rgb(0xFF, 0x5F, 0x57);
+const TL_MINIMIZE: Color32 = Color32::from_rgb(0xFE, 0xBC, 0x2E);
+const TL_MAXIMIZE: Color32 = Color32::from_rgb(0x28, 0xC8, 0x40);
+/// Traffic-light gray when the window is unfocused.
+const TL_UNFOCUSED: Color32 = Color32::from_rgb(0xC4, 0xC4, 0xC4);
+/// Hover-darkened traffic light fill and its glyph color.
+const TL_HOVER_SCALE: f32 = 0.8;
+const TL_GLYPH: Color32 = Color32::from_rgb(0x4A, 0x00, 0x00);
 
 /// Window-control actions from the custom titlebar.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -58,27 +73,72 @@ pub fn show_titlebar(ui: &mut egui::Ui, title: &str, maximized: bool) -> Titleba
         theme::TEXT_DIM,
     );
 
-    // horizontal_centered: allocates the full panel height so the window
-    // buttons center vertically.
-    ui.horizontal_centered(|ui| {
-        // Right-aligned window buttons, painted glyphs.
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            ui.spacing_mut().item_spacing.x = 0.0;
-            if window_button(ui, "close", BTN_W, |p, c, col| paint_close(p, c, col)).clicked() {
-                action = TitlebarAction::Close;
+    if MACOS {
+        // Traffic lights sit on the LEFT edge (macOS convention). Placed
+        // with explicit rects anchored to the same `bar_rect` center the
+        // title text uses: a layout widget (`ui.horizontal`) would not
+        // allocate the full bar height and the lights would sit off-center.
+        let focused = ui.input(|i| i.viewport().focused.unwrap_or(true));
+        let cy = bar_rect.center().y;
+        let mut cx = bar_rect.min.x + 16.0;
+        for (base, label, action_) in [
+            (TL_CLOSE, "Close", TitlebarAction::Close),
+            (TL_MINIMIZE, "Minimize", TitlebarAction::Minimize),
+            (
+                TL_MAXIMIZE,
+                "Maximize / Restore",
+                TitlebarAction::ToggleMaximize,
+            ),
+        ] {
+            let center = Pos2::new(cx, cy);
+            // 20×20 hit target around the 12px circle (native-like).
+            let hit = Rect::from_center_size(center, Vec2::splat(20.0));
+            let resp = ui.allocate_rect(hit, Sense::click());
+            let painter = ui.painter();
+            let fill = if !focused {
+                TL_UNFOCUSED
+            } else if resp.hovered() {
+                shade(base, TL_HOVER_SCALE)
+            } else {
+                base
+            };
+            painter.circle_filled(center, 6.0, fill);
+            if resp.hovered() {
+                match label {
+                    "Close" => paint_close(painter, center, TL_GLYPH),
+                    "Minimize" => paint_minimize(painter, center, TL_GLYPH),
+                    _ => paint_mac_maximize(painter, center, TL_GLYPH),
+                }
             }
-            if window_button(ui, "maximize", BTN_W, |p, c, col| {
-                paint_maximize(p, c, col, maximized)
-            })
-            .clicked()
-            {
-                action = TitlebarAction::ToggleMaximize;
+            if resp.clicked() {
+                action = action_;
             }
-            if window_button(ui, "minimize", BTN_W, paint_minimize).clicked() {
-                action = TitlebarAction::Minimize;
-            }
+            resp.on_hover_text(label);
+            cx += 20.0;
+        }
+    } else {
+        // horizontal_centered: allocates the full panel height so the window
+        // buttons center vertically.
+        ui.horizontal_centered(|ui| {
+            // Right-aligned window buttons, painted glyphs.
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.spacing_mut().item_spacing.x = 0.0;
+                if window_button(ui, "close", BTN_W, paint_close).clicked() {
+                    action = TitlebarAction::Close;
+                }
+                if window_button(ui, "maximize", BTN_W, |p, c, col| {
+                    paint_maximize(p, c, col, maximized)
+                })
+                .clicked()
+                {
+                    action = TitlebarAction::ToggleMaximize;
+                }
+                if window_button(ui, "minimize", BTN_W, paint_minimize).clicked() {
+                    action = TitlebarAction::Minimize;
+                }
+            });
         });
-    });
+    }
 
     TitlebarOutput {
         action,
@@ -118,6 +178,37 @@ fn window_button(
         "maximize" => "Maximize / Restore",
         _ => "Minimize",
     })
+}
+
+/// Darken a color by a factor (0..1).
+fn shade(c: Color32, k: f32) -> Color32 {
+    Color32::from_rgb(
+        (c.r() as f32 * k).round() as u8,
+        (c.g() as f32 * k).round() as u8,
+        (c.b() as f32 * k).round() as u8,
+    )
+}
+
+/// macOS maximize glyph: two filled wedges pointing NE / SW (native style).
+fn paint_mac_maximize(p: &egui::Painter, c: Pos2, col: Color32) {
+    let s = 3.0;
+    let ne = [
+        c + Vec2::new(0.0, -s),
+        c + Vec2::new(0.0, 0.0),
+        c + Vec2::new(s, 0.0),
+    ];
+    let sw = [
+        c + Vec2::new(0.0, s),
+        c + Vec2::new(0.0, 0.0),
+        c + Vec2::new(-s, 0.0),
+    ];
+    for tri in [ne, sw] {
+        p.add(egui::Shape::convex_polygon(
+            tri.to_vec(),
+            col,
+            Stroke::NONE,
+        ));
+    }
 }
 
 fn paint_minimize(p: &egui::Painter, c: Pos2, col: Color32) {

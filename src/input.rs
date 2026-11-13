@@ -31,13 +31,16 @@ pub enum ShortcutAction {
     NextSource,
     /// U / I / S: switch the image scaling filter.
     Filter(FilterMode),
+    /// ⌘Q (macOS) / Ctrl+Q: quit the app.
+    Close,
 }
 
 /// Match a key press to an action. Called for each pressed key.
 pub fn match_shortcut(key: Key, modifiers: Modifiers) -> Option<ShortcutAction> {
-    let ctrl = modifiers.ctrl;
+    // Platform-appropriate accelerator: Cmd on macOS, Ctrl elsewhere.
+    let accel = modifiers.command;
     let shift = modifiers.shift;
-    match (key, ctrl, shift) {
+    match (key, accel, shift) {
         (Key::ArrowLeft, false, _) => Some(ShortcutAction::Prev),
         (Key::Comma, false, _) => Some(ShortcutAction::Prev),
         (Key::ArrowRight, false, _) => Some(ShortcutAction::Next),
@@ -64,6 +67,7 @@ pub fn match_shortcut(key: Key, modifiers: Modifiers) -> Option<ShortcutAction> 
         (Key::F11, _, _) => Some(ShortcutAction::ToggleFullscreen),
         (Key::O, true, false) => Some(ShortcutAction::OpenFile),
         (Key::O, true, true) => Some(ShortcutAction::OpenFolder),
+        (Key::Q, true, false) => Some(ShortcutAction::Close),
         (Key::Escape, false, _) => Some(ShortcutAction::ClosePopoverOrFullscreen),
         _ => None,
     }
@@ -98,6 +102,9 @@ mod tests {
         Modifiers {
             ctrl,
             shift,
+            // Platform-agnostic: egui sets `command` for Cmd on macOS and
+            // for Ctrl elsewhere; match_shortcut only reads `command`.
+            command: ctrl,
             ..Default::default()
         }
     }
@@ -147,6 +154,10 @@ mod tests {
         assert_eq!(
             match_shortcut(Key::L, mods(false, false)),
             Some(ShortcutAction::ToggleLock)
+        );
+        assert_eq!(
+            match_shortcut(Key::Q, mods(true, false)),
+            Some(ShortcutAction::Close)
         );
         assert_eq!(
             match_shortcut(Key::Num1, mods(false, false)),
