@@ -96,6 +96,9 @@ impl PanBounds {
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>, initial: Option<PathBuf>) -> Self {
+        #[cfg(target_os = "macos")]
+        crate::macos_open::register();
+
         crate::cjk::install_font(&cc.egui_ctx);
         theme::apply_theme(&cc.egui_ctx);
         let persisted = crate::config::load();
@@ -546,6 +549,11 @@ impl eframe::App for App {
 
         // Drag-drop support: dropping files anywhere on the window opens
         // the first one (files: sibling playlist; folder/archive: playlist).
+        #[cfg(target_os = "macos")]
+        if let Some(path) = crate::macos_open::take_first() {
+            self.open_path(&path);
+        }
+
         let dropped: Vec<PathBuf> = ctx.input(|i| {
             i.raw
                 .dropped_files

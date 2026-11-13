@@ -1,10 +1,11 @@
 [package]
 name = "miru"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 
 [build-dependencies]
 ab_glyph = "0.2"
+cc = "1"
 winresource = "0.1"
 
 [features]

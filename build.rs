@@ -86,6 +86,16 @@ fn ico_entry_bmp(rgba: &[u8], size: usize) -> Vec<u8> {
 }
 
 fn main() {
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("macos") {
+        println!("cargo:rerun-if-changed=src/macos_open.m");
+        cc::Build::new()
+            .file("src/macos_open.m")
+            .compile("miru_macos_open");
+        println!("cargo:rustc-link-lib=framework=AppKit");
+        println!("cargo:rustc-link-lib=framework=Carbon");
+        return;
+    }
+
     if env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return;
     }
